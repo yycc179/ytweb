@@ -87,7 +87,7 @@ function verify_signature(req, res, next) {
     res.json({ err: 1, p, x_s, salt })
 }
 
-function do_update(req, res, next) {
+function do_update(req, res) {
     exec(`update ${req.up_param} ${req.body.after}`, (error, stdout) => {
         if (error) {
             res.send(error)
