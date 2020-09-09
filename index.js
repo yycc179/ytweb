@@ -56,10 +56,9 @@ app.get('/', (req, res) => {
         res.send('Connect service error!\n');
         client.end();
     })
-
 });
 
-app.get('/keylist', (req, res) => {
+app.get('/api/keylist', (req, res) => {
     fs.readdir(config.PATH.api_key, (err, files) => {
         if (files && files.length) {
             id = Math.floor(Math.random() * files.length);
@@ -70,16 +69,21 @@ app.get('/keylist', (req, res) => {
             res.send('keylist err!');
         }
     });
-
 })
 
+
 function verify_signature(req, res, next) {
-    req.up_param = 'yts'
-    console.log('ss=', process.env['HOOK_SECRET_YTS'])
+    if (req.url.indexOf('web') > 0) {
+        req.up_param = 'web'
+        const salt = process.env['HOOK_SECRET_WEB']
+    }
+    else {
+        req.up_param = 'yts'
+        const salt = process.env['HOOK_SECRET_YTS']
+    }
+
     const x_s = req.headers['x-hub-signature']
-    const salt = process.env['HOOK_SECRET_YTS'] || 'none'
-    console.log(req.body)
-    const s = 'sha1=' + hmac('sha1', salt, JSON.stringify(req.body), 'hex')
+    const s = 'sha1=' + hmac('sha1', salt || 'none', JSON.stringify(req.body), 'hex')
 
     if (s == x_s) {
         return next()
@@ -93,11 +97,9 @@ function do_update(req, res, next) {
             res.send(error)
             return child.kill()
         }
-
         res.send(stdout)
     })
-
 }
 
 app.post('/githook/yts', verify_signature, do_update);
-
+app.post('/githook/web', verify_signature, do_update);
