@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "product": "NODE_ENV=production pm2 start index.js -i 0 -n yts"
-
   },
   "author": "yy",
   "license": "ISC",

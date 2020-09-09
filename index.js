@@ -73,22 +73,18 @@ app.get('/api/keylist', (req, res) => {
 
 
 function verify_signature(req, res, next) {
-    if (req.url.indexOf('web') > 0) {
-        req.up_param = 'web'
-        const salt = process.env['HOOK_SECRET_WEB']
-    }
-    else {
-        req.up_param = 'yts'
-        const salt = process.env['HOOK_SECRET_YTS']
-    }
+    const { p } = req.query;
+    const salt = (p == 'web' ? process.env['HOOK_SECRET_WEB'] : process.env['HOOK_SECRET_YTS']) || 'none'
+
+    req.up_param = p;
 
     const x_s = req.headers['x-hub-signature']
-    const s = 'sha1=' + hmac('sha1', salt || 'none', JSON.stringify(req.body), 'hex')
+    const s = 'sha1=' + hmac('sha1', salt, JSON.stringify(req.body), 'hex')
 
     if (s == x_s) {
         return next()
     }
-    res.json({ err: 1, x_s, salt })
+    res.json({ err: 1, p, x_s, salt })
 }
 
 function do_update(req, res, next) {
@@ -101,5 +97,4 @@ function do_update(req, res, next) {
     })
 }
 
-app.post('/githook/yts', verify_signature, do_update);
-app.post('/githook/web', verify_signature, do_update);
+app.post('/githook/', verify_signature, do_update);
